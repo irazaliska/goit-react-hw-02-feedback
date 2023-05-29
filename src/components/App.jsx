@@ -1,26 +1,59 @@
-import { Profile } from './Profile/Profile';
+import { Component } from 'react';
+import { Section } from './Section/Section';
 import { Statistics } from './Statistics/Statistics';
-import { FriendList } from './FriendList/FriendList';
-import { TransactionHistory } from './TransactionHistory/TransactionHistory';
+import { FeedbackOptions } from './FeedbackOptions/FeedbackOptions';
+import { Notification } from './Notification/Notification';
+import { Container } from './App.styled';
 
-import user from 'data/user.json';
-import data from 'data/data.json';
-import friends from 'data/friends.json';
-import transactions from 'data/transactions.json';
+export class App extends Component {
+  state = {
+    good: 0,
+    neutral: 0,
+    bad: 0,
+  };
 
-export const App = () => {
-  return ( 
-    <div>
-      <Profile
-        username={user.username}
-        tag={user.tag}
-        location={user.location}
-        avatar={user.avatar}
-        stats={user.stats} /> 
-      <Statistics title="Upload stats" stats={data} />
-      <FriendList friends={friends} />
-      <TransactionHistory items={transactions} />
-      </div>
-  );
-};
+  handleBtnClick = e => {
+    const { name } = e.target;
+    this.setState(prevState => {
+      return { [name]: prevState[name] + 1 };
+    });
+  };
 
+  countTotalFeedback = () => {
+    const { good, neutral, bad } = this.state;
+    return good + neutral + bad;
+  };
+
+  countPositiveFeedbackPercentage = () => {
+    const { good } = this.state;
+    return Math.round((good * 100) / this.countTotalFeedback());
+  };
+
+  render() {
+    const optionsKey = Object.keys(this.state);
+    const totalFeedback = this.countTotalFeedback();
+    return (
+      <Container>
+        <Section title={`Please leave feedback`}>
+          <FeedbackOptions
+            options={optionsKey}
+            onLeaveFeedback={this.handleBtnClick}
+          />
+        </Section>
+        <Section title={`Statistics`}>
+          {totalFeedback > 0 ? (
+            <Statistics
+              good={this.state.good}
+              neutral={this.state.neutral}
+              bad={this.state.bad}
+              total={totalFeedback}
+              positivePercentage={this.countPositiveFeedbackPercentage()}
+            />
+          ) : (
+            <Notification message={`There is no feedback`} />
+          )}
+        </Section>
+      </Container>
+    );
+  }
+}
